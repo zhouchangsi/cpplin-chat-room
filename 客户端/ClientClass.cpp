@@ -49,23 +49,44 @@ void JoinRoom(ClientClass& Client) {
 
 	//将消息基类的指针指向MsgJoin子类，发送给服务端
 }
-
+bool IsLeave(ClientClass& Client, char* buff)
+{
+	//判断用户是否输入leave,有则发送MsgLeave类消息给服务器
+	if (strcmp(buff, "leave") == 0)
+		return True;
+	else
+		return False;
+}
 /*有代码需要写，负责人：单文聪*/
-void Chat(ClientClass Client) {
+void Chat(ClientClass& Client) {
 
 	char buff[256];//存放需要发送的消息
-		
+
 	/*
 		负责人：
 		功能：发送聊天消息给服务端
 	*/
 
-		//发送聊天消息给服务端
-		//判断用户是否有输入leave,有则发送MsgLeave类消息给服务器
-		//然后退出该循环；
-		
+	//发送聊天消息给服务端
+	//判断用户是否有输入leave,有则发送MsgLeave类消息给服务器
+	//然后退出该循环；
+	while (true) {
+		// 等待用户输入聊天消息
+		cout << "请输入聊天消息（输入'leave'退出）：";
+		cin.getline(buff, sizeof(buff));
 
-	
+		if (IsLeave(Client, buff))
+		{
+			MsgLeave leaveMsg;
+			// 发送消息给服务器
+			Client.SendData(reinterpret_cast<char*>(&leaveMsg), sizeof(leaveMsg));
+
+			// 退出循环，结束聊天
+			break;
+		}
+		else
+			Client.SendData(reinterpret_cast<char*>(&buff), sizeof(buff));
+	}
 }
 
 void Send(LPVOID lp) {
