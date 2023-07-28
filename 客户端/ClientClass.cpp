@@ -53,9 +53,9 @@ bool IsLeave(ClientClass& Client, char* buff)
 {
 	//判断用户是否输入leave,有则发送MsgLeave类消息给服务器
 	if (strcmp(buff, "leave") == 0)
-		return True;
+		return true;
 	else
-		return False;
+		return false;
 }
 /*有代码需要写，负责人：单文聪*/
 void Chat(ClientClass& Client) {
@@ -160,16 +160,24 @@ void ClientClass::RecvData() {
 			负责人：
 			功能：接收从服务端发来的消息
 		*/
-
-
 		//接收消息，将buff最后一位的下一位置为0，才能正确读取数据
-		
 		//将信息显示到图形界面窗口
-
 		/*
 			如果收到创建房间失败或者取昵称失败的消息
 			要求重新输入房间号或昵称
 		*/
+		int row = 0;
+		int len = recv(ClntSock, buff, 255, NULL);
+		if (len > 0) {
+			buff[len] = 0;
+
+			outtextxy(1, row * 20, buff);
+			row++;
+			if (row > 18) {
+				row = 0;
+				cleardevice();
+			}
+		}
 	}
 
 }
