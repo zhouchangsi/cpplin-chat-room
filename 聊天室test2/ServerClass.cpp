@@ -147,9 +147,9 @@ void LeaveRoom(ClntObject& Clnt, MsgType* msg) {
 /*有代码需要写，负责人：李友军*/
 void Talk(ClntObject& Clnt, char* temp1) {
 
-	char temp[256] = { 0 };//临时数组，存放发给其他客户端的信息
+	//char temp[256] = { 0 };//临时数组，存放发给其他客户端的信息
 
-	memset(temp, 0, 256);//清空
+	//memset(temp, 0, 256);//清空
 
 	WaitForSingleObject(HMute, INFINITE);
 	/*
@@ -157,9 +157,16 @@ void Talk(ClntObject& Clnt, char* temp1) {
 		功能：将聊天的消息发送给同房间的其他客户端
 		发送要求：昵称：消息   例如 张三：中午吃啥？
 	*/
-
-	ReleaseMutex(HMute);
+	string aa = Clnt.GetName()+":"+temp1;
+	
+	for (int i = 0;i < CountNum;++i) {
+		if (Clnts[i].GetRoomID() == Clnt.GetRoomID()) {
+			//strcpy(temp, (const char*)&(Clnt.GetName()));
+			send(Clnts[i].GetSocket(), (const char*)&aa, sizeof(temp1), 0);
+		}
+		ReleaseMutex(HMute);
 	}
+}
 
 unsigned WINAPI HandleClnt(void* Clnt) {//传入的参数是客户端对象在客户端对象数组中的索引
 
