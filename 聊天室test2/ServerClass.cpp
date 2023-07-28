@@ -292,6 +292,11 @@ void ServerClass::Communication() {
 		
 		//生产者
 		WaitForSingleObject(HMute, INFINITE);
+		/*
+			负责人：
+			功能：生成ClntObeject对象，将对象放入Clnts数组
+		*/
+
 		ClntObject* Clnt = new ClntObject(ClntSock);//生产者
 		Clnts[i] = *Clnt;//缓冲区
 		CountNum++;

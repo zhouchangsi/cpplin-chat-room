@@ -79,7 +79,6 @@ void Chat(ClientClass& Client) {
 		{
 			MsgLeave leaveMsg;
 			// 发送消息给服务器
-			Client.SendData(reinterpret_cast<char*>(&leaveMsg), sizeof(leaveMsg));
 
 			// 退出循环，结束聊天
 			break;
