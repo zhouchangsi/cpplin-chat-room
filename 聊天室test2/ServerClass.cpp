@@ -77,10 +77,17 @@ void ShowRoom(ClntObject &Clnt, MsgType* msg) {
 		负责人：
 		功能：接收到ShowRoom消息，给客户端发送所有房间号
 	*/
-
+	
 	//将父类MsgType指针转为MsgShow子类指针
-
+	// 
 	//将所有房间的房间号作为消息发给该客户端
+	for (set<string>::iterator it = RoomIDs.begin(); it != RoomIDs.end(); it++)
+	{
+		IDs += *it;
+	}
+	char ch[256];
+	strcpy(ch, IDs.c_str());
+	send(Clnt.GetSocket(), ch, strlen(ch), NULL);
 }
 
 /*有代码需要写，负责人：李亚伦*/

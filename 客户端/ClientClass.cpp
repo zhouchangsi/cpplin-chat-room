@@ -11,8 +11,9 @@ void ShowRoom(ClientClass& Client) {
 		负责人：陈育佳
 		功能：发送查看所有房间的消息给服务端
 	*/
-	
+	MsgShow s;
 	//将消息基类的指针指向MsgShow子类，发送给服务端
+	send(Client.GetSocket(), (const char *)(MsgShow*)msgtype,msgtype->DataLen , NULL);
 }
 
 /*有代码需要写，负责人：李亚伦*/
