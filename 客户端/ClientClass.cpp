@@ -26,10 +26,19 @@ void CreateRoom(ClientClass &Client) {
 	*/
 
 	//提示用户输入房间号、昵称string roomid ; string name
+	cout << "输入房间号:";
+	cin >> roomid;
+	cout << "输入昵称:";
+	cin >> name;
 
 	//接收用户输入的房间号和昵称，并设置CLientClass对象房间号和昵称属性
-	
+	Client.SetRoomID(roomid);//获取客户端所属房间号
+	Client.SetName(name);//设置客户端昵称
+
 	//将消息基类的指针指向MsgCreate子类，发送给服务端
+	MsgCreate msg(roomid, name);
+	msgtype = &msg;
+	send(Client.GetSocket, (const char*)msgtype, strlen(msgtype), NULL);
 }
 
 /*有代码需要写，负责人：李冰*/

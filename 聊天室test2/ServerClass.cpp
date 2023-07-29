@@ -92,14 +92,34 @@ void CreateRoom(ClntObject& Clnt, MsgType* msg) {
 
 	/*
 		负责人：李亚伦
-		功能：接收到CreateRoom消息，发客户端发创建成功或失败的消息
+		功能：接收到CreateRoom消息，发客户端创建成功或失败的消息
 		参数：create中有传过来的房间号和昵称属性
 	*/
-
+	//判断是否有相同房间名称
+	set<string>::iterator pos = RoomIDs.find(create->GetRoomID());
+	if (pos != RoomIDs.end())//有相同的房间名
+	{
+		temp[] = "房间创建失败，房间已经存在";
+		send(Clnt.GetSocket(), temp, strlen(temp), NULL);  //把temp数组  从服务器传回客户端  
+		return;
+	}
+	//判断是否有相同昵称
+	for (int i = 0; i < MaxNum; i++)
+	{
+		if (Clnts[i].SetName() == create->GetName())
+		{
+			temp[] = "昵称创建失败，昵称已经存在";
+			send(Clnt.GetSocket(), temp, strlen(temp), NULL);
+			return;
+		}
+	}
+	Clnt.m_RoomID = create->GetRoomID;
+	Clnt.m_Name = create->GetName;
+	temp[] = "房间创建成功";
+	send(Clnt.GetSocket(), temp, strlen(temp), NULL);
 	//判断是否有该房间，若没有则新建，并且保存在RoomIDs里，记录昵称到Clnt的RoomID属性中，
 	//若已存在房间，则发给该客户端新建房间错误的消息
-
-	//如果在同一房间&&昵称无重复，则取昵称成功，并记录昵称到Clnt的Name属性中，
+		//如果在同一房间&&昵称无重复，则取昵称成功，并记录昵称到ClntObject的Name属性中，
 	//昵称重复则发给该客户端取名失败的消息
 }
 
