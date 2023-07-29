@@ -166,13 +166,14 @@ void Talk(ClntObject& Clnt, char* temp1) {
 	*/
 	string aa = Clnt.GetName()+":"+temp1;
 	
+	
 	for (int i = 0;i < CountNum;++i) {
 		if (Clnts[i].GetRoomID() == Clnt.GetRoomID()) {
 			//strcpy(temp, (const char*)&(Clnt.GetName()));
-			send(Clnts[i].GetSocket(), (const char*)&aa, sizeof(temp1), 0);
+			send(Clnts[i].GetSocket(), aa.c_str(), sizeof(temp1), 0);
 		}
-		ReleaseMutex(HMute);
 	}
+	ReleaseMutex(HMute);
 }
 
 unsigned WINAPI HandleClnt(void* Clnt) {//传入的参数是客户端对象在客户端对象数组中的索引
