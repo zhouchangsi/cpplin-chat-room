@@ -13,7 +13,8 @@ void ShowRoom(ClientClass& Client) {
 	*/
 	MsgShow s;
 	//将消息基类的指针指向MsgShow子类，发送给服务端
-	send(Client.GetSocket(), (const char *)(MsgShow*)msgtype,msgtype->DataLen , NULL);
+	msgtype = &s;
+	send(Client.GetSocket(), (const char *)msgtype,msgtype->DataLen , NULL);
 }
 
 /*有代码需要写，负责人：李亚伦*/
@@ -25,19 +26,24 @@ void CreateRoom(ClientClass &Client) {
 		负责人：李亚伦
 		功能：发送创建房间的消息给服务端
 	*/
-
 	//提示用户输入房间号、昵称string roomid ; string name
+	cout << "输入房间号:";
+	cin >> roomid;
+	cout << "输入昵称:";
+	cin >> name;
 
 	//接收用户输入的房间号和昵称，并设置CLientClass对象房间号和昵称属性
-	
+	Client.SetRoomID(roomid);//获取客户端所属房间号
+	Client.SetName(name);//设置客户端昵称
+
 	//将消息基类的指针指向MsgCreate子类，发送给服务端
+	MsgCreate msg(roomid, name);
+	msgtype = &msg;
+	send(Client.GetSocket(), (const char*)msgtype, msgtype->DataLen, NULL);
 }
 
 /*有代码需要写，负责人：李冰*/
 void JoinRoom(ClientClass& Client) {
-	MsgType* msgtype;//消息基类
-	string roomid;//房间号
-	string name;//昵称
 	/*
 		负责人：
 		功能：发送加入房间的消息给服务端
@@ -48,14 +54,43 @@ void JoinRoom(ClientClass& Client) {
 	//接收用户输入的房间号和昵称，并设置CLientClass对象房间号和昵称属性
 
 	//将消息基类的指针指向MsgJoin子类，发送给服务端
+
+	MsgType* msgtype; // 消息基类的指针
+
+	// 提示用户输入房间号和昵称
+	string roomid, name;
+	cout << "请输入要加入的房间号: ";
+	cin >> roomid;
+	cout << "请输入昵称: ";
+	cin >> name;
+
+	// 设置ClientClass对象的房间号和昵称属性
+	Client.SetRoomID(roomid);
+	Client.SetName(name);
+
+	// 创建并发送MsgJoin消息给服务器
+	msgtype = new MsgJoin(roomid, name);
+	//Client.Send(msgtype);
+	//delete msgtype;
+	send(Client.GetSocket(), (const char*)msgtype, msgtype->DataLen, 0);//将消息发给服务端
 }
 bool IsLeave(ClientClass& Client, char* buff)
 {
-	//判断用户是否输入leave,有则发送MsgLeave类消息给服务器
+	//判断用户是否输入leave,有则发送MsgLeave类消息给服务器	
+	/*
 	if (strcmp(buff, "leave") == 0)
 		return True;
 	else
-		return False;
+		return False;	
+	*/
+	if (strcmp(buff, "//leave") == 0) {//如果输入//leave,则离开房间
+		MsgType* msgtype;//消息基类
+		MsgLeave msgleave(Client.GetRoomID(), Client.GetName());
+		msgtype = &msgleave;
+		send(Client.GetSocket(), (const char*)msgtype, msgtype->DataLen, 0);//将消息发给服务端
+		return TRUE;
+	}
+	return FALSE;
 }
 /*有代码需要写，负责人：单文聪*/
 void Chat(ClientClass& Client) {
@@ -70,6 +105,7 @@ void Chat(ClientClass& Client) {
 	//发送聊天消息给服务端
 	//判断用户是否有输入leave,有则发送MsgLeave类消息给服务器
 	//然后退出该循环；
+	/*
 	while (true) {
 		// 等待用户输入聊天消息
 		cout << "请输入聊天消息（输入'leave'退出）：";
@@ -86,6 +122,21 @@ void Chat(ClientClass& Client) {
 		}
 		else
 			Client.SendData(reinterpret_cast<char*>(&buff), sizeof(buff));
+	}
+	*/
+
+	while (!IsLeave(Client, buff)) {
+
+		memset(buff, 0, sizeof(buff));
+
+		cout << "请输入：" << endl;
+		cin >> buff;
+
+		if (IsLeave(Client, buff)) {
+			return;
+		}
+		send(Client.GetSocket(), buff, strlen(buff), NULL);//发信息给服务器
+
 	}
 }
 
@@ -135,7 +186,7 @@ void Send(LPVOID lp) {
 
 		//退出程序
 		else if (strcmp(buff, "exit") == 0) {
-			Client.~ClientClass();
+			
 			exit(0);
 		}
 	}

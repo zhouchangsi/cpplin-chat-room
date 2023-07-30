@@ -83,7 +83,7 @@ void ShowRoom(ClntObject &Clnt, MsgType* msg) {
 	//将所有房间的房间号作为消息发给该客户端
 	for (set<string>::iterator it = RoomIDs.begin(); it != RoomIDs.end(); it++)
 	{
-		IDs += *it;
+		IDs += (*it + ' ');
 	}
 	char ch[256];
 	strcpy(ch, IDs.c_str());
@@ -102,11 +102,39 @@ void CreateRoom(ClntObject& Clnt, MsgType* msg) {
 		功能：接收到CreateRoom消息，发客户端发创建成功或失败的消息
 		参数：create中有传过来的房间号和昵称属性
 	*/
+	/*
+			负责人：李亚伦
+			功能：接收到CreateRoom消息，发客户端创建成功或失败的消息
+			参数：create中有传过来的房间号和昵称属性
+		*/
+		//判断是否有相同房间名称
+	set<string>::iterator pos = RoomIDs.find(create->GetRoomID());
+	if (pos != RoomIDs.end())//有相同的房间名
+	{
+		//temp[] = "房间创建失败，房间已经存在";
+		strcpy(temp, "房间创建失败，房间已经存在");
+		send(Clnt.GetSocket(), temp, strlen(temp), NULL);  //把temp数组  从服务器传回客户端  
+		return;
+	}
+	//判断是否有相同昵称
+	for (int i = 0; i < MaxNum; i++) {
+		if (Clnts[i].GetName() == create->GetName()) {
+			//temp[] = "昵称创建失败，昵称已经存在";
+			strcpy(temp, "昵称创建失败，昵称已经存在");
+			send(Clnt.GetSocket(), temp, strlen(temp), NULL);
+			return;
+		}
+	}
+	Clnt.SetName(create->GetName()) ;
+	Clnt.SetRoomID(create->GetRoomID());
+	RoomIDs.insert(create->GetRoomID());//添加房间号到房间号容器中
 
+	//temp[] = "房间创建成功";
+	strcpy(temp, "房间创建成功");
+	send(Clnt.GetSocket(), temp, strlen(temp), NULL);
 	//判断是否有该房间，若没有则新建，并且保存在RoomIDs里，记录昵称到Clnt的RoomID属性中，
 	//若已存在房间，则发给该客户端新建房间错误的消息
-
-	//如果在同一房间&&昵称无重复，则取昵称成功，并记录昵称到Clnt的Name属性中，
+		//如果在同一房间&&昵称无重复，则取昵称成功，并记录昵称到ClntObject的Name属性中，
 	//昵称重复则发给该客户端取名失败的消息
 }
 
@@ -122,14 +150,74 @@ void JoinRoom(ClntObject& Clnt, MsgType* msg) {
 		功能：接收到JoinRoom消息，发客户端发加入成功或失败的消息
 		参数：join中有传过来的房间号和昵称属性
 	*/
+	/*
+	MsgJoin* join = dynamic_cast<MsgJoin*>(msg);
 
-	//将父类MsgType指针转为MsgCreate子类指针
+	// 判断房间号是否存在
+	if (RoomIDs.find(join->GetRoomID()) != RoomIDs.end()) {
+		// 判断昵称是否重复
+		if (isNicknameAvailable(join->nickname)) {
+			// 加入房间成功，记录房间号和昵称
+			Clnt.RoomID = join->roomID;
+			Clnt.Name = join->nickname;
 
-	//判断是否有该房间，若有就加入，记录昵称到ClntObject的RoomID属性中，
-	//若没有此房间，则发给该客户端新建房间错误的消息
+			// 发送加入成功消息给客户端
+			snprintf(temp, sizeof(temp), "Joined room %d successfully", join->roomID);
+			// sendMsgToClient(Clnt, temp);
+		}
+		else {
+			// 昵称重复，发送消息给客户端
+			snprintf(temp, sizeof(temp), "Nickname %s is already taken", join->nickname);
+			// sendMsgToClient(Clnt, temp); 
+		}
+	}
+	else {
+		// 房间不存在，发送消息给客户端
+		snprintf(temp, sizeof(temp), "Room %d does not exist", join->roomID);
+		// sendMsgToClient(Clnt, temp);
+	}
+	*/
 
-	//如果在同一房间&&昵称无重复，则取昵称成功，并记录昵称到ClntObject的Name属性中，
-	//昵称重复则发给该客户端取名失败的消息
+	if (RoomIDs.find(join->GetRoomID()) != RoomIDs.end()) {//如果有该房间，则加入
+
+		RoomIDs.insert(join->GetRoomID());//添加房间号到房间号容器中
+
+		send(Clnt.GetSocket(), "加入房间成功", sizeof("加入房间成功"), 0);//发给客户端
+
+		Clnt.SetRoomID(join->GetRoomID());//记录房间号
+
+	}
+	else {//房号重复则报错
+
+		send(Clnt.GetSocket(), "加入房间失败", sizeof("加入房间成功"), 0);//发给客户端
+
+	}
+	for (int i = 0; i < CountNum; i++) {
+		//如果在同一房间&&昵称无重复，则取昵称成功
+		if (join->GetRoomID() == Clnt.GetRoomID() && join->GetName() != Clnt.GetName()) {
+
+			send(Clnt.GetSocket(), "取昵称成功", sizeof("取昵称成功"), 0);//发给该客户端
+
+			Clnt.SetName(join->GetName());//记录昵称
+
+			cout << join->GetName() << "加入了" << join->GetRoomID() << "房间" << endl;//在服务端显示成功
+
+			memset(temp, 0, 256);//清空
+
+			sprintf_s(temp, "%s加入房间", Clnt.GetName().c_str());//temp3是发给该房间所有客户端的消息
+
+			//将该客户端加入的消息发给该房间的所有成员
+			if (join->GetRoomID() == Clnts[i].GetRoomID()) {//如果属于同一个房间，就发送信息
+				send(Clnts[i].GetSocket(), temp, strlen(temp), NULL);
+			}
+
+		}
+	}
+	if (Clnt.GetName() == "") {//昵称重复则报错
+		send(Clnt.GetSocket(), "取昵称失败，换一个吧", sizeof("取昵称失败，换一个吧"), 0);//发给客户端
+	}
+
+
 }
 
 /*有代码需要写，负责人：农乐诚*/
@@ -170,7 +258,7 @@ void Talk(ClntObject& Clnt, char* temp1) {
 	for (int i = 0;i < CountNum;++i) {
 		if (Clnts[i].GetRoomID() == Clnt.GetRoomID()) {
 			//strcpy(temp, (const char*)&(Clnt.GetName()));
-			send(Clnts[i].GetSocket(), aa.c_str(), sizeof(temp1), 0);
+			send(Clnts[i].GetSocket(), aa.c_str(), sizeof(aa), 0);
 		}
 	}
 	ReleaseMutex(HMute);
